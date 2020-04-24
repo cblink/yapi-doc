@@ -270,14 +270,11 @@ class YApiHandler
 
             // 数组返回只需要处理子集的数据
             foreach ($payload as $item) {
-                array_push(
-                    $data['items'],
-                    $this->handlerArray(
-                        '',
-                        $item,
-                        array_merge($prefix, ['*']),
-                        $method
-                    )
+                $data['items'] = $this->handlerArray(
+                    '',
+                    $item,
+                    array_merge($prefix, ['*']),
+                    $method
                 );
                 break;
             }
