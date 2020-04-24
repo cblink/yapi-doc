@@ -1,0 +1,27 @@
+{
+    "name": "cblink/yapi-doc",
+    "license": "MIT",
+    "require-dev": {
+        "cblink/yapi-sdk": "dev-master",
+        "phpunit/phpunit": "^8.5",
+        "friendsofphp/php-cs-fixer": "^2.16"
+    },
+    "autoload": {
+        "psr-4": {
+            "Cblink\\YApiDoc\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Cblink\\YApiDoc\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "check-style": [
+            "./vendor/bin/php-cs-fixer fix --using-cache=no --diff --config=.php_cs --dry-run --ansi"
+        ],
+        "fix-style": [
+            "./vendor/bin/php-cs-fixer fix --using-cache=no --config=.php_cs --ansi"
+        ]
+    }
+}
