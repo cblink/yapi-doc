@@ -23,5 +23,12 @@
         "fix-style": [
             "./vendor/bin/php-cs-fixer fix --using-cache=no --config=.php_cs --ansi"
         ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Cblink\\YApiDoc\\ServiceProvider"
+            ]
+        }
     }
 }

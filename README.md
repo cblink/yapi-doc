@@ -15,19 +15,6 @@ composer require cblink/yapi-doc --dev
 ```
 
 ### 配置代码
-
-添加至config/app.php providers中
-
-```php
-[
-   // ...
-  'providers' => [
-    //...
-    Cblink\YApiDoc\ServiceProvider::class,
-  ]
-];
-```
-
 导入配置文件，配置文件名必须为yapi.php
 ```shell script
 php artisan vendor:publish --provider=Cblink\YApiDoc\ServiceProvider::class
