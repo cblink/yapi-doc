@@ -1,8 +1,10 @@
 {
     "name": "cblink/yapi-doc",
     "license": "MIT",
+    "require": {
+        "cblink/yapi-sdk": "dev-master"
+    },
     "require-dev": {
-        "cblink/yapi-sdk": "dev-master",
         "phpunit/phpunit": "^8.5",
         "friendsofphp/php-cs-fixer": "^2.16"
     },
