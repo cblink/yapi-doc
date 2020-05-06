@@ -156,7 +156,7 @@ class YApiHandler
      */
     protected function getJsonParameters()
     {
-        $data = $this->request->json()->all();
+        $data = array_merge($this->request->json()->all(), $this->request->request->all());
 
         $properties = [];
 
