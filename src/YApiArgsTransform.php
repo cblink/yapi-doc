@@ -146,6 +146,7 @@ class YApiArgsTransform
      */
     public function getResponseTrans(string $key, string $default = '')
     {
+        if (!$key) return $default;
         return $this->get('res_trans', $key, $default);
     }
 
@@ -158,6 +159,7 @@ class YApiArgsTransform
      */
     public function getResponseExcept(string $key, array $default = [])
     {
+        if (!$key) return $default;
         return $this->get('res_except', $key, $default);
     }
 

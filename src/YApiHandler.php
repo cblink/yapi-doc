@@ -60,7 +60,6 @@ class YApiHandler
 
         $fileName = $this->buildUrl($this->request->getMethod(), $this->request->route()->uri());
 
-
         $filePath = $this->app->config->get('yapi.cache_path', $this->app->storagePath() . '/app/yapi/');
 
         if (!file_exists($filePath)) {
@@ -149,7 +148,7 @@ class YApiHandler
         return $parameters;
     }
 
-    /**
+    /**YApiHandler.php
      * 获取post json参数
      *
      * @return array
@@ -158,27 +157,14 @@ class YApiHandler
     {
         $data = array_merge($this->request->json()->all(), $this->request->request->all());
 
-        $properties = [];
-
-        foreach ($data as $key => $item) {
-            $properties[$key] = $this->handlerArray(
-                $this->transform->getRequestTrans($key),
-                $item,
-                [$key],
-                'request'
-            );
-        }
-
-        if ($properties) {
+        if ($data) {
             return [[
                 "name" => "root",
                 "in" => "body",
-                "schema" =>  [
+                "schema" =>  array_merge([
                     "type" => "object",
                     "title" => "empty object",
-                    "properties" =>  $properties,
-                    "required" => Arr::except(array_keys($data), $this->transform->getRequestExcept('*'))
-                ]
+                ], $this->handlerArray($data, [], 'request'))
             ]];
         }
 
@@ -225,7 +211,6 @@ class YApiHandler
 
         // 处理子集
         $data = $this->handlerArray(
-            '返回数据',
             $response['data'],
             [],
             'response'
@@ -247,31 +232,24 @@ class YApiHandler
      * @param string $method
      * @return array
      */
-    protected function handlerArray($remark, array $payload = [], array $prefix = [], $method = 'request')
+    protected function handlerArray(array $payload = [], array $prefix = [], $method = 'request')
     {
-        if (empty($payload)) {
-            return [];
-        }
-
-        $prefixString = implode('.', $prefix);
-
+        // 获取payload类型，对象或数组
         $type = $this->getType($payload);
+
+        //
+        $transMethodString = sprintf('get%sTrans', ucfirst($method));
+        $expectMethodString = sprintf('get%sExcept', ucfirst($method));
 
         $data = [
             'type' => $type,
-            'description' => $remark,
-            ($type == 'array' ? 'items' : 'properties') => []
+            ($type == 'array' ? 'items' : 'properties') => [],
         ];
 
-        $transMethodString = sprintf('get%sTrans', ucfirst($method));
-        $expectMethodString = sprintf('get%sExpect', ucfirst($method));
-
         if ($type === 'array') {
-
             // 数组返回只需要处理子集的数据
             foreach ($payload as $item) {
                 $data['items'] = $this->handlerArray(
-                    '',
                     $item,
                     array_merge($prefix, ['*']),
                     $method
@@ -279,14 +257,22 @@ class YApiHandler
                 break;
             }
         } else {
-            foreach ($payload as $key => $item) {
-                $currentString = implode('.', array_merge($prefix, [$key]));
 
+            // 获取前缀
+            $prefixString = implode('.', $prefix);
+
+            // 必填字段
+            $data['required'] = array_keys(Arr::except($payload, $this->transform->{$expectMethodString}($prefixString)));
+
+            foreach ($payload as $key => $item) {
+
+                // 当前key的前缀
+                $currentString = implode('.', array_merge($prefix, [$key]));
+                // 当前备注
                 $currentRemark = $this->transform->{$transMethodString}($currentString);
 
                 if (is_array($item)) {
                     $data['properties'][$key] = $this->handlerArray($currentRemark, $item);
-                    $data['required'] = Arr::except(array_keys($item), $this->transform->$expectMethodString($prefixString));
                     continue;
                 }
 
