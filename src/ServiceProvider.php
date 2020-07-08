@@ -13,7 +13,8 @@ class ServiceProvider extends LaravelServiceProvider
     public function register()
     {
         if ($this->app->environment() === 'local') {
-            $this->commands([Commands\PutDocToYApi::class]);
+
+            $this->commands([Commands\UploadDocToYApi::class]);
 
             $this->publishes([__DIR__ . '/../config/' => config_path()]);
         }
