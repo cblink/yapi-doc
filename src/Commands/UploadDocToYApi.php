@@ -2,7 +2,7 @@
 
 namespace Cblink\YApiDoc\Commands;
 
-use Cblink\YApi\YApi;
+use Cblink\YApi\YApiRequest;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
@@ -210,7 +210,7 @@ class UploadDocToYApi extends Command
      */
     public function upload($project, $config, $swagger)
     {
-        $yapi = new YApi(config('yapi.base_url'));
+        $yapi = new YApiRequest(config('yapi.base_url'));
 
         $yapi->setConfig($config['id'], $config['token'])
             ->importData(json_encode($swagger, JSON_UNESCAPED_UNICODE, 512), config('yapi.merge', 'normal'));
