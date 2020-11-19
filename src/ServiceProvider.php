@@ -12,7 +12,7 @@ class ServiceProvider extends LaravelServiceProvider
 {
     public function register()
     {
-        if ($this->app->environment() === 'local') {
+        if (in_array($this->app->environment(), ['local', 'testing'])) {
 
             $this->commands([Commands\UploadDocToYApi::class]);
 
