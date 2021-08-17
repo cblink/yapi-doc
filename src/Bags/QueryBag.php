@@ -18,15 +18,18 @@ class QueryBag extends BaseBag
 
             $item = [];
 
-            if (Arr::has(Arr::get($config, 'public.query', []), $key)) {
-                $plan = Arr::get(Arr::get($config, 'public.query', []), $key);
+            if (Arr::has($config, sprintf('public.query.%s', $key))) {
+
+                $plan = Arr::get($config, sprintf('public.query.%s', $key));
+
                 $item = [
                     'name' => $key,
                     'required' => (bool) ($plan['required'] ?? $dto->hasRequestExcept($key)),
                     'description' => empty(trim($description)) && !empty($plan) ? $plan['plan'] : $description,
                     'in' => 'query',
-                    'type' => 'string'
+                    'type' => 'string',
                 ];
+
             } else {
                 $item = [
                     'name' => $key,
