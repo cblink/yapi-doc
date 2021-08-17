@@ -3,7 +3,6 @@
     "license": "MIT",
     "require": {
         "ext-json": "*",
-        "laravel/framework": "^5.5|~6.0|~7.0|~8.0",
         "cblink/yapi-sdk": "^0.1.0",
         "cblink/laravel-dto": "^1.0.0"
     },
