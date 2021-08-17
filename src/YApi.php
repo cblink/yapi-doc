@@ -63,7 +63,10 @@ class YApi
 
         $this->paramBag = new ParamsBag($this->getUri(), $dto->params);
         $this->queryBag = new QueryBag($request->query->all(), $dto, $this->config);
-        $this->jsonBag = new JsonBag($request->request->all(), $dto);
+
+        $body = $request->method() == 'GET' ? [] : $request->request->all();
+
+        $this->jsonBag = new JsonBag($body, $dto);
         $this->responseBag = new ResponseBag($response->getContent(), $dto, $this->config);
     }
 
