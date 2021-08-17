@@ -18,8 +18,8 @@ class QueryBag extends BaseBag
 
             $item = [];
 
-            if (Arr::has(Arr::get($config, 'yapi.public.query', []), $key)) {
-                $plan = Arr::get(Arr::get($config, 'yapi.public.query', []), $key);
+            if (Arr::has(Arr::get($config, 'public.query', []), $key)) {
+                $plan = Arr::get(Arr::get($config, 'public.query', []), $key);
                 $item = [
                     'name' => $key,
                     'required' => (bool) ($plan['required'] ?? $dto->hasRequestExcept($key)),

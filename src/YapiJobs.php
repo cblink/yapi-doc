@@ -18,7 +18,7 @@ class YapiJobs implements ShouldQueue
 
     public function __construct(array $config = [])
     {
-        $this->config = $config ?: config('yapi.config');
+        $this->config = $config ?: config('config');
     }
 
     public function handle()
@@ -205,7 +205,7 @@ class YapiJobs implements ShouldQueue
      */
     public function upload($project, $config, $swagger)
     {
-        $yapi = new YApiRequest(Arr::get($this->config, 'yapi.base_url'));
+        $yapi = new YApiRequest(Arr::get($this->config, 'base_url'));
 
         $yapi->setConfig($config['id'], $config['token'])
             ->importData(json_encode($swagger, JSON_UNESCAPED_UNICODE, 512), Arr::get($this->config, 'yapi.merge', 'normal'));
