@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 
 class YapiJobs implements ShouldQueue
@@ -204,10 +205,10 @@ class YapiJobs implements ShouldQueue
      */
     public function upload($project, $config, $swagger)
     {
-        $yapi = new YApiRequest(config('yapi.base_url'));
+        $yapi = new YApiRequest(Arr::get($this->config, 'yapi.base_url'));
 
         $yapi->setConfig($config['id'], $config['token'])
-            ->importData(json_encode($swagger, JSON_UNESCAPED_UNICODE, 512), config('yapi.merge', 'normal'));
+            ->importData(json_encode($swagger, JSON_UNESCAPED_UNICODE, 512), Arr::get($this->config, 'yapi.merge', 'normal'));
 
         $this->line(sprintf("%s 成功更新%s个文档!", $project, count($swagger['paths'])));
     }

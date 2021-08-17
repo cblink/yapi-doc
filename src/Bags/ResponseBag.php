@@ -9,13 +9,17 @@ class ResponseBag extends BaseBag
 {
     protected $dto;
 
-    public function __construct($content, $dto)
+    protected $config;
+
+    public function __construct($content, $dto, array $config = [])
     {
         $this->dto = $dto;
 
+        $this->config = $config;
+
         $response = $this->getOriginToArray($content);
 
-        $publicData = $this->getOptions(config('yapi.public.data'), $response);
+        $publicData = $this->getOptions(Arr::get($config, 'yapi.public.data'), $response);
 
         $this->items = [
             "200" =>  [
@@ -35,7 +39,7 @@ class ResponseBag extends BaseBag
         $data = $this->handlerArray($payload, [], 'response');
 
         if (!empty($data)) {
-            $this->items['200']['schema']['properties'][config('yapi.public.prefix')] = $data;
+            $this->items['200']['schema']['properties'][Arr::get($config, 'yapi.public.prefix')] = $data;
         }
     }
 
@@ -94,7 +98,7 @@ class ResponseBag extends BaseBag
      */
     public function getPayload($response)
     {
-        $prefix = config('yapi.public.prefix');
+        $prefix = Arr::get($this->config, 'yapi.public.prefix');
 
         if (!empty($prefix) && isset($response[$prefix])) {
             return $response[$prefix];

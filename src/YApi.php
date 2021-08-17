@@ -44,22 +44,27 @@ class YApi
 
     protected $useUrl = false;
 
+    protected $config;
+
     /**
      * YApiHandler constructor.
      * @param Request $request
      * @param Response $response
      * @param YapiDTO $dto
+     * @param array $config
      */
-    public function __construct($request, $response, YapiDTO $dto)
+    public function __construct($request, $response, YapiDTO $dto, array $config = [])
     {
         $this->request = $request;
         $this->response = $response;
         $this->dto = $dto;
 
+        $this->config = $config;
+
         $this->paramBag = new ParamsBag($this->getUri(), $dto->params);
-        $this->queryBag = new QueryBag($request->query->all(), $dto);
+        $this->queryBag = new QueryBag($request->query->all(), $dto, $this->config);
         $this->jsonBag = new JsonBag($request->request->all(), $dto);
-        $this->responseBag = new ResponseBag($response->getContent(), $dto);
+        $this->responseBag = new ResponseBag($response->getContent(), $dto, $this->config);
     }
 
     /**
