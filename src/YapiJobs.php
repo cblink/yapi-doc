@@ -1,36 +1,30 @@
 <?php
 
-namespace Cblink\YApiDoc\Commands;
+namespace Cblink\YApiDoc;
 
 use Cblink\YApi\YApiRequest;
-use Illuminate\Console\Command;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\File;
 
-class UploadDocToYApi extends Command
+class YapiJobs implements ShouldQueue
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'upload:yapi';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'update local docs to yapi';
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * @throws \Cblink\YApi\YApiException
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     */
+    public function __construct(array $config = [])
+    {
+        $this->config = $config ?: config('yapi.config');
+    }
+
     public function handle()
     {
         $startMemory = memory_get_usage();
 
-        foreach (config('yapi.config') as $project => $config) {
+        foreach ($this->config as $project => $config) {
             if (!file_exists($this->getCachePath($project))) {
                 $this->line(sprintf("%s 文档无需更新！", $project));
                 continue;
@@ -216,5 +210,10 @@ class UploadDocToYApi extends Command
             ->importData(json_encode($swagger, JSON_UNESCAPED_UNICODE, 512), config('yapi.merge', 'normal'));
 
         $this->line(sprintf("%s 成功更新%s个文档!", $project, count($swagger['paths'])));
+    }
+
+    public function line($message)
+    {
+        dump($message);
     }
 }

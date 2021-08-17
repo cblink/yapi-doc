@@ -42,9 +42,7 @@
     },
     "extra": {
         "laravel": {
-            "providers": [
-                "Cblink\\YApiDoc\\ServiceProvider"
-            ]
+            "providers": []
         }
     }
 }
