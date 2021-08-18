@@ -36,7 +36,7 @@ class ResponseBag extends BaseBag
         $payload = $this->getPayload($response);
 
         // 处理子集
-        $data = $this->handlerArray($payload, [], 'response');
+        $data = $this->handlerArray((is_array($payload) ? $payload : []), [], 'response');
 
         if (!empty($data)) {
             $this->items['200']['schema']['properties'][Arr::get($config, 'public.prefix')] = $data;
