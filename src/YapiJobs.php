@@ -210,7 +210,14 @@ class YapiJobs implements ShouldQueue
         $yapi = new YApiRequest(Arr::get($this->config, 'base_url'));
 
         $yapi->setConfig($config['id'], $config['token'])
-            ->importData(json_encode($swagger, JSON_UNESCAPED_UNICODE, 512), Arr::get($this->config, 'merge', 'normal'));
+            ->importData($swaggerContent = json_encode($swagger, 448, 512), Arr::get($this->config, 'merge', 'normal'));
+
+        if (Arr::get($this->config, 'openapi.enable')) {
+            file_put_contents(
+                Arr::get($this->config, 'openapi.path', public_path('openapi.json')),
+                $swaggerContent
+            );
+        }
 
         $this->line(sprintf("%s 成功更新%s个文档!", $project, count($swagger['paths'])));
     }
