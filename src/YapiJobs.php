@@ -207,10 +207,12 @@ class YapiJobs implements ShouldQueue
      */
     public function upload($project, $config, $swagger)
     {
-        $yapi = new YApiRequest(Arr::get($this->config, 'base_url'));
+        if (Arr::get($this->config, 'base_url')) {
+            $yapi = new YApiRequest(Arr::get($this->config, 'base_url'));
 
-        $yapi->setConfig($config['id'], $config['token'])
-            ->importData($swaggerContent = json_encode($swagger, 448, 512), Arr::get($this->config, 'merge', 'normal'));
+            $yapi->setConfig($config['id'], $config['token'])
+                ->importData($swaggerContent = json_encode($swagger, 448, 512), Arr::get($this->config, 'merge', 'normal'));
+        }
 
         if (Arr::get($this->config, 'openapi.enable')) {
             file_put_contents(
