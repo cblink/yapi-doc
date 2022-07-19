@@ -153,7 +153,7 @@ class YApi
      */
     protected function getFilePath($project, $fileName)
     {
-        $filePath = storage_path(sprintf('/app/yapi/docs/%s/', $project));
+        $filePath = storage_path(sprintf('app/yapi/docs/%s/', $project));
 
         if (!file_exists($filePath)) {
             mkdir($filePath, 0777, true);
