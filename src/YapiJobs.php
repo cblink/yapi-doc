@@ -16,6 +16,8 @@ class YapiJobs implements ShouldQueue
 
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public $config;
+
     public function __construct(array $config = [])
     {
         $this->config = $config ?: config('config');
@@ -25,7 +27,7 @@ class YapiJobs implements ShouldQueue
     {
         $startMemory = memory_get_usage();
 
-        foreach ($this->config['config'] as $project => $config) {
+        foreach ($this->config['config'] ?? [] as $project => $config) {
             if (!file_exists($this->getCachePath($project))) {
                 $this->line(sprintf("%s 文档无需更新！", $project));
                 continue;
