@@ -209,6 +209,8 @@ class YapiJobs implements ShouldQueue
     {
         $swaggerContent = json_encode($swagger, 448, 512);
 
+        $swaggerContent = str_replace(['"{', '}"'], ['"{{', '}}"'], $swaggerContent);
+
         if (Arr::get($this->config, 'base_url')) {
             $yapi = new YApiRequest(Arr::get($this->config, 'base_url'));
 
