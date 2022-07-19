@@ -13,6 +13,11 @@ return [
         ],
     ],
 
+    'openapi' => [
+        'enable' => false,
+        'path' => public_path('openapi.json'),
+    ],
+
     'public' => [
         // 前缀
         'prefix' => 'data',
