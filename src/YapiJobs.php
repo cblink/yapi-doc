@@ -223,7 +223,7 @@ class YapiJobs implements ShouldQueue
             );
         }
 
-        $this->line(sprintf("%s 成功更新%s个文档!", $project, count($swagger['paths'])));
+        $this->line(sprintf("%s 成功更新 %s 个文档!", $project, count($swagger['paths'])));
     }
 
     public function line($message)
