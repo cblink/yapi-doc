@@ -35,6 +35,13 @@ class ResponseBag extends BaseBag
 
         $payload = $this->getPayload($response);
 
+        // 接口未返回数据时，根据 YapiDTO 的 response.trans 生成响应信息
+        if (empty($payload)) {
+            $dtoResponse = $dto->response['trans'] ?? [];
+
+            $payload = $dtoResponse;
+        }
+
         // 处理子集
         $data = $this->handlerArray((is_array($payload) ? $payload : []), [], 'response');
 
