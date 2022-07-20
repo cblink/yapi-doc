@@ -94,7 +94,12 @@ class YApi
      */
     public function getUri()
     {
-        return $this->useUrl ? $this->request->path() : $this->request->route()->uri();
+        if ($this->useUrl) {
+            return $this->request->path();
+        }
+
+        return $this->request->route()?->uri()
+            ?? $this->request->path();
     }
 
     /**
