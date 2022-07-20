@@ -94,12 +94,17 @@ class YApi
      */
     public function getUri()
     {
+        $requestPath = $this->request->path();
         if ($this->useUrl) {
-            return $this->request->path();
+            return $requestPath;
         }
 
-        return $this->request->route()?->uri()
-            ?? $this->request->path();
+        $route = $this->request->route();
+        if (is_null($route)) {
+            throw new \RuntimeException("请为接口 {$requestPath} 定义路由");
+        }
+
+        return $route->uri();
     }
 
     /**
