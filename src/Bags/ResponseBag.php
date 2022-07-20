@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Cblink\YApiDoc\Bags;
 
 use Illuminate\Support\Arr;
@@ -39,7 +38,26 @@ class ResponseBag extends BaseBag
         if (empty($payload)) {
             $dtoResponse = $dto->response['trans'] ?? [];
 
-            $payload = $dtoResponse;
+            // 判断是不是列表响应数据
+            $isList = false;
+            $transFirstKey = key($dtoResponse);
+            if (str_contains($transFirstKey, 'data.*.')) {
+                $isList = true;
+            }
+
+            // 处理 payload，准备子集注释转换
+            if ($isList) {
+                // 处理列表响应的每项内容
+                $responseTrans = [];
+                foreach ($dtoResponse as $key => $value) {
+                    $key = str_replace('data.*.', '', $key);
+                    $responseTrans[$key] = $value;
+                }
+
+                $payload = [$responseTrans];
+            } else {
+                $payload = $dtoResponse;
+            }
         }
 
         // 处理子集
