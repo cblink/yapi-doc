@@ -1,135 +1,232 @@
 <?php
 
+namespace Cblink\YApiDoc;
 
-namespace Cblink\YApiDoc\Bags;
-
+use Cblink\YApi\YApiRequest;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\File;
 
-class ResponseBag extends BaseBag
+class YapiJobs implements ShouldQueue
 {
-    protected $dto;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $config;
+    public $config;
 
-    public function __construct($content, $dto, array $config = [])
+    public function __construct(array $config = [])
     {
-        $this->dto = $dto;
-
-        $this->config = $config;
-
-        $response = $this->getOriginToArray($content);
-
-        $publicData = $this->getOptions(Arr::get($config, 'public.data', []), $response);
-
-        $this->items = [
-            "200" =>  [
-                "description" =>  "successful operation",
-                "schema" =>  [
-                    "type" =>  "object",
-                    "title" =>  "empty object",
-                ]
-            ]
-        ];
-
-        $this->items['200']['schema'] = array_merge($publicData, $this->items['200']['schema']);
-
-        $payload = $this->getPayload($response);
-
-        // 接口未返回数据时，根据 YapiDTO 的 response.trans 生成响应信息
-        if (empty($payload)) {
-            $dtoResponse = $dto->response['trans'] ?? [];
-
-            // 判断是不是列表响应数据
-            $isList = false;
-            $transFirstKey = key($dtoResponse);
-            if (str_contains($transFirstKey, 'data.*.')) {
-                $isList = true;
-            }
-
-            // 处理 payload，准备子集注释转换
-            if ($isList) {
-                // 处理列表响应的每项内容
-                $responseTrans = [];
-                foreach ($dtoResponse as $key => $value) {
-                    $key = str_replace('data.*.', '', $key);
-                    $responseTrans[$key] = $value;
-                }
-
-                $payload = [$responseTrans];
-            } else {
-                $payload = $dtoResponse;
-            }
-        }
-
-        // 处理子集
-        $data = $this->handlerArray((is_array($payload) ? $payload : []), [], 'response');
-
-        if (!empty($data)) {
-            $this->items['200']['schema']['properties'][Arr::get($config, 'public.prefix')] = $data;
-        }
+        $this->config = $config ?: config('config');
     }
 
-    /**
-     * @param $content
-     * @return false|mixed|string
-     */
-    protected function getOriginToArray($content)
+    public function handle()
     {
-        $content = json_decode($content, true);
+        $startMemory = memory_get_usage();
 
-        if (JSON_ERROR_NONE === json_last_error()) {
-            return $content;
-        }
-
-        return [];
-    }
-
-    /**
-     * @param $options
-     * @param $response
-     * @return array[]
-     */
-    protected function getOptions($options, $response)
-    {
-        $item = ['properties' => [], 'required' => []];
-
-        foreach ($options as $key => $val) {
-            $must = $val['must'] ?? false;
-            $type = $val['type'] ?? 'string';
-
-            if (!$must && !Arr::has($response, $key)) {
+        foreach ($this->config['config'] ?? [] as $project => $config) {
+            if (!file_exists($this->getCachePath($project))) {
+                $this->line(sprintf("%s 文档无需更新！", $project));
                 continue;
             }
 
-            if (array_key_exists('required', $val) && $val['required']) {
-                array_push($item['required'], $key);
+            $swagger = $this->loadSwagger($project);
+
+            if (empty($swagger['paths'])) {
+                $this->line(sprintf("%s 文档无需更新！", $project));
+                continue;
             }
 
-            $item['properties'][$key] = [
-                'type' => isset($val['children']) ? 'object' : (isset($response[$key]) ? $this->formatReturnType($response[$key]) : $type),
-                'description' => $val['plan'] ?? '',
-            ];
-
-            if (!empty($val['children'])) {
-                $item['properties'][$key] = array_merge($item['properties'][$key], $this->getOptions($val['children'], $response[$key] ?? []));
-            }
+            $this->upload($project, $config, $swagger);
         }
 
-        return $item;
+        $this->line(sprintf("内存消耗 %sk", (memory_get_usage() - $startMemory) / 1024));
     }
 
     /**
-     * @param $response
-     * @return mixed
+     * @param $project
+     * @return array
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function getPayload($response)
+    public function loadSwagger($project)
     {
-        $prefix = Arr::get($this->config, 'public.prefix');
+        $swagger = ["swagger" => "2.0", "paths" => []];
 
-        if (!empty($prefix) && array_key_exists($prefix, $response)) {
-            return $response[$prefix];
+        $version = $this->getVersionData($project);
+
+        $update = [];
+
+        foreach (scandir($this->getCachePath($project)) as $file) {
+            if ($this->continueFile($file)) {
+                continue;
+            }
+
+            list($method, $uri, $content) = $this->getSwaggerByFile($project, $file);
+
+            $key = sprintf('%s.%s', $method, str_replace('/', '.', $uri));
+            $md5 = md5(serialize($content));
+
+            if (array_key_exists($key, $version) && $md5 == $version[$key]) {
+                continue;
+            }
+
+            $version[$key] = $md5;
+
+            array_push($update, [
+                'method' => $method,
+                'url' => $uri,
+            ]);
+
+            $swagger['paths'][$uri][$method] = $content;
         }
 
-        return $response;
+        $this->makeVersionFile($project, $version);
+
+        $this->makeUpdateFile($project, $update);
+
+        return $swagger;
+    }
+
+    /**
+     * @param $project
+     * @return array|mixed
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function getVersionData($project)
+    {
+        $file = $this->getVersionFilePath($project);
+
+        if (!File::exists($file)) {
+            return [];
+        }
+
+        $data = json_decode(File::get($file), true);
+
+        if (json_last_error()) {
+            return [];
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param $name
+     * @param array $data
+     */
+    public function makeVersionFile($name, array $data)
+    {
+        File::put($this->getVersionFilePath($name), json_encode($data));
+    }
+
+    /**
+     * 生成更新文件
+     *
+     * @param $name
+     * @param array $data
+     */
+    public function makeUpdateFile($name, array $data)
+    {
+        // 没有数据部新增记录
+        if (!$data) {
+            return;
+        }
+
+        if (!file_exists($path = storage_path('app/yapi/update'))) {
+            mkdir($path, 0777, true);
+        }
+
+        File::put(sprintf('%s/%s-%s.json', $path, $name, date('YmdHis')), json_encode($data));
+    }
+
+    /**
+     * 获取版本文件
+     *
+     * @param $name
+     * @return string
+     */
+    public function getVersionFilePath($name)
+    {
+        return storage_path(sprintf('app/yapi/%s.version', $name));
+    }
+
+    /**
+     * 获取缓存目录
+     *
+     * @param $project
+     * @return \Illuminate\Config\Repository|\Illuminate\Contracts\Foundation\Application|mixed
+     */
+    public function getCachePath($project)
+    {
+        return storage_path(sprintf('app/yapi/docs/%s/', $project));
+    }
+
+    /**
+     * 获取swagger信息
+     *
+     * @param $project
+     * @param $file
+     * @return array
+     */
+    public function getSwaggerByFile($project, $file)
+    {
+        $example = explode("-", substr($file, 0, -5));
+
+        $method = strtolower($example[0]);
+        $uri = base64_decode($example[1]);
+
+        if (!isset($swagger['paths'][$uri])) {
+            $swagger['paths'][$uri] = [];
+        }
+
+        $content = json_decode(file_get_contents(sprintf("%s%s", $this->getCachePath($project), $file)), true);
+
+        return [$method, $uri, $content];
+    }
+
+    /**
+     * 检测是否需要load的文件
+     *
+     * @param $file
+     * @return bool
+     */
+    public function continueFile($file)
+    {
+        return $file == '.' || $file == '..' || substr($file, -5) !== '.yapi';
+    }
+
+    /**
+     * 提交代码
+     *
+     * @param $project
+     * @param $config
+     * @param $swagger
+     * @throws \Cblink\YApi\YApiException
+     */
+    public function upload($project, $config, $swagger)
+    {
+        $swaggerContent = json_encode($swagger, 448, 512);
+
+        if (Arr::get($this->config, 'base_url')) {
+            $yapi = new YApiRequest(Arr::get($this->config, 'base_url'));
+
+            $yapi->setConfig($config['id'], $config['token'])
+                ->importData($swaggerContent, Arr::get($this->config, 'merge', 'normal'));
+        }
+
+        if (Arr::get($this->config, 'openapi.enable')) {
+            file_put_contents(
+                Arr::get($this->config, 'openapi.path', public_path('openapi.json')),
+                $swaggerContent
+            );
+        }
+
+        $this->line(sprintf("%s 成功更新 %s 个文档!", $project, count($swagger['paths'])));
+    }
+
+    public function line($message)
+    {
+        dump($message);
     }
 }
