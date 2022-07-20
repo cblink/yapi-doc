@@ -212,7 +212,7 @@ class YapiJobs implements ShouldQueue
         // 转换路由变量为 api 接口变量
         $swaggerContent = preg_replace(
             ['/"\{/', '/\/\{/', '/\}"/', '/\}\//'], 
-            ['"{{', '/{{', '}}', '}}/'], 
+            ['"{{', '/{{', '}}"', '}}/'], 
             $swaggerContent
         );
 
