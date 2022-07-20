@@ -100,7 +100,7 @@ class ResponseBag extends BaseBag
     {
         $prefix = Arr::get($this->config, 'public.prefix');
 
-        if (!empty($prefix) && isset($response[$prefix])) {
+        if (!empty($prefix) && array_key_exists($prefix, $response)) {
             return $response[$prefix];
         }
 
