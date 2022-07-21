@@ -19,7 +19,7 @@ class YapiJobs implements ShouldQueue
 
     public function __construct(array $config = [])
     {
-        $this->config = $config ?: config('config');
+        $this->config = $config ?: config('yapi');
     }
 
     public function handle()
