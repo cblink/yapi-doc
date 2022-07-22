@@ -104,6 +104,7 @@ class YapiDTO extends DTO
     }
 
     /**
+     * getRequestTrans
      * @param $name
      * @param $key
      * @param null $default

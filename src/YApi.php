@@ -119,6 +119,9 @@ class YApi
             "tags" =>  [$this->dto->getCategoryName($this->request->route()->uri())],
             "summary" =>  $this->dto->name,
             "description" =>  $this->dto->desc,
+            "consumes" => [
+                "application/json"
+            ],
             "parameters" =>  array_merge(
                 $this->paramBag->toArray(),
                 $this->queryBag->toArray(),
