@@ -4,10 +4,9 @@
  * sync with https://github.com/cblink/yapi-doc/blob/master/config/yapi.php
  */
 return [
+    'enable' => env('YAPI_ENABLE', true),
     // yap请求地址
-    // 'base_url' => 'http://xxxxxxxx/', // custom yapi url
-    // 'base_url' => 'http://yapi.smart-xwork.cn/', // yapi url
-    'base_url' => false, // disable upload to yapi
+    'base_url' => env('YAPI_BASE_URL', 'http://yapi.smart-xwork.cn/'),
     // 文档合并方式，"normal"(普通模式) , "good"(智能合并), "merge"(完全覆盖)
     'merge' => 'merge',
 
