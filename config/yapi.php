@@ -10,16 +10,14 @@ return [
     // 文档合并方式，"normal"(普通模式) , "good"(智能合并), "merge"(完全覆盖)
     'merge' => 'merge',
 
+    // yapi
+    // 1. 查看项目设置 -> 项目配置 -> 项目ID -> 填入 config.default.id 字段 (项目 id 与 url 中的 projectId 相同 /project/{projectId}/setting)
+    // 2. 查看项目设置 -> token配置 -> token (点击复制按钮获取 项目 token)
     'config' => [
         'default' => [
-            'id' => 1,
-            'token' => '',
+            'id' => env('YAPI_PROJECT_ID'),
+            'token' => env('YAPI_TOKEN'),
         ]
-    ],
-
-    'openapi' => [
-        'enable' => true, // generate openapi.json
-        'path' => public_path('openapi.json'),
     ],
 
     'public' => [
@@ -29,6 +27,7 @@ return [
         'query' => [
             'page' => ['plan' => '页码，默认 1'],
             'per_page' => ['plan' => '每页数量，不超过 200，默认 15'],
+            'is_all' => ['plan' => '是否获取全部数据，不超过 1000 挑'],
         ],
 
         // 公共的响应参数
