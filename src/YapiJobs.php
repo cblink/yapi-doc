@@ -19,7 +19,7 @@ class YapiJobs implements ShouldQueue
 
     public function __construct(array $config = [])
     {
-        $this->config = empty($config) ? config('yapi', []) : $config;
+        $this->config = $config ?: config('yapi', []);
     }
 
     public function handle()
@@ -206,21 +206,16 @@ class YapiJobs implements ShouldQueue
      */
     public function upload($project, $config, $swagger)
     {
+        if (! Arr::get($this->config, 'enable')) {
+            return;
+        }
+
         $swaggerContent = json_encode($swagger, 448, 512);
 
-        if (Arr::get($this->config, 'base_url')) {
-            $yapi = new YApiRequest(Arr::get($this->config, 'base_url'));
+        $yapi = new YApiRequest(Arr::get($this->config, 'base_url'));
 
-            $yapi->setConfig($config['id'], $config['token'])
-                ->importData($swaggerContent, Arr::get($this->config, 'merge', 'normal'));
-        }
-
-        if (Arr::get($this->config, 'openapi.enable')) {
-            file_put_contents(
-                Arr::get($this->config, 'openapi.path', public_path('openapi.json')),
-                $swaggerContent
-            );
-        }
+        $yapi->setConfig($config['id'], $config['token'])
+            ->importData($swaggerContent, Arr::get($this->config, 'merge', 'normal'));
 
         $this->line(sprintf("%s 成功更新 %s 个文档!", $project, count($swagger['paths'])));
     }
