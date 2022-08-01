@@ -13,12 +13,16 @@ use Illuminate\Support\Facades\File;
 
 class YapiJobs implements ShouldQueue
 {
+    /**
+     * @var array
+     */
+    protected $config;
 
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(array $config = [])
     {
-        $this->config = $config ?: config('config');
+        $this->config = $config ?: config('yapi');
     }
 
     public function handle()
