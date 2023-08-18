@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Cblink\YApiDoc\Bags;
 
 use Illuminate\Support\Arr;
@@ -34,6 +33,32 @@ class ResponseBag extends BaseBag
         $this->items['200']['schema'] = array_merge($publicData, $this->items['200']['schema']);
 
         $payload = $this->getPayload($response);
+
+        // 接口未返回数据时，根据 YapiDTO 的 response.trans 生成响应信息
+        if (empty($payload)) {
+            $dtoResponse = $dto->response['trans'] ?? [];
+
+            // 判断是不是列表响应数据
+            $isList = false;
+            $transFirstKey = key($dtoResponse);
+            if (str_contains($transFirstKey, 'data.*.')) {
+                $isList = true;
+            }
+
+            // 处理 payload，准备子集注释转换
+            if ($isList) {
+                // 处理列表响应的每项内容
+                $responseTrans = [];
+                foreach ($dtoResponse as $key => $value) {
+                    $key = str_replace('data.*.', '', $key);
+                    $responseTrans[$key] = $value;
+                }
+
+                $payload = [$responseTrans];
+            } else {
+                $payload = $dtoResponse;
+            }
+        }
 
         // 处理子集
         $data = $this->handlerArray((is_array($payload) ? $payload : []), [], 'response');
@@ -100,7 +125,7 @@ class ResponseBag extends BaseBag
     {
         $prefix = Arr::get($this->config, 'public.prefix');
 
-        if (!empty($prefix) && isset($response[$prefix])) {
+        if (!empty($prefix) && array_key_exists($prefix, $response)) {
             return $response[$prefix];
         }
 

@@ -22,14 +22,14 @@ class YapiJobs implements ShouldQueue
 
     public function __construct(array $config = [])
     {
-        $this->config = $config ?: config('yapi');
+        $this->config = $config ?: config('yapi', []);
     }
 
     public function handle()
     {
         $startMemory = memory_get_usage();
 
-        foreach ($this->config['config'] as $project => $config) {
+        foreach ($this->config['config'] ?? [] as $project => $config) {
             if (!file_exists($this->getCachePath($project))) {
                 $this->line(sprintf("%s 文档无需更新！", $project));
                 continue;
@@ -209,12 +209,18 @@ class YapiJobs implements ShouldQueue
      */
     public function upload($project, $config, $swagger)
     {
+        if (! Arr::get($this->config, 'enable')) {
+            return;
+        }
+
+        $swaggerContent = json_encode($swagger, 448, 512);
+
         $yapi = new YApiRequest(Arr::get($this->config, 'base_url'));
 
         $yapi->setConfig($config['id'], $config['token'])
-            ->importData(json_encode($swagger, JSON_UNESCAPED_UNICODE, 512), Arr::get($this->config, 'merge', 'normal'));
+            ->importData($swaggerContent, Arr::get($this->config, 'merge', 'normal'));
 
-        $this->line(sprintf("%s 成功更新%s个文档!", $project, count($swagger['paths'])));
+        $this->line(sprintf("%s 成功更新 %s 个文档!", $project, count($swagger['paths'])));
     }
 
     public function line($message)

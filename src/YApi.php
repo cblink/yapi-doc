@@ -94,7 +94,17 @@ class YApi
      */
     public function getUri()
     {
-        return $this->useUrl ? $this->request->path() : $this->request->route()->uri();
+        $requestPath = $this->request->path();
+        if ($this->useUrl) {
+            return $requestPath;
+        }
+
+        $route = $this->request->route();
+        if (is_null($route)) {
+            throw new \RuntimeException("请为接口 {$requestPath} 定义路由");
+        }
+
+        return $route->uri();
     }
 
     /**
@@ -156,7 +166,7 @@ class YApi
      */
     protected function getFilePath($project, $fileName)
     {
-        $filePath = storage_path(sprintf('/app/yapi/docs/%s/', $project));
+        $filePath = storage_path(sprintf('app/yapi/docs/%s/', $project));
 
         if (!file_exists($filePath)) {
             mkdir($filePath, 0777, true);
