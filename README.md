@@ -103,7 +103,7 @@ class BaseTestCase extends TestCase
         $response = $res->baseResponse;
         // 参数 dto
         $dto = new \Cblink\YApiDoc\YapiDTO([
-            // 这里天多项会同时发布到多个项目组中
+            // 这里填多项会同时发布到多个项目组中
             'project' => ['default', 'custom'],
             'name' => '接口名称',
             'category' => '接口分组',
