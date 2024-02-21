@@ -2,7 +2,7 @@
 
 namespace Cblink\YApiDoc;
 
-use Cblink\Dto\Dto as DTO;
+use Cblink\DTO\DTO;
 use Illuminate\Support\Arr;
 
 /**
